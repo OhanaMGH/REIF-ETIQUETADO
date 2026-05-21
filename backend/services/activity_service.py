@@ -2,20 +2,37 @@ import torch
 from transformers import CLIPProcessor, CLIPModel
 from PIL import Image
 
-
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 model_name = "openai/clip-vit-base-patch32"
 
-model = CLIPModel.from_pretrained(model_name).to(device)
-processor = CLIPProcessor.from_pretrained(model_name)
+model = None
+processor = None
+
+
+def _load_clip():
+
+    global model, processor
+
+    if model is None or processor is None:
+
+        print("Cargando modelo CLIP...")
+
+        model = CLIPModel.from_pretrained(model_name).to(device)
+
+        processor = CLIPProcessor.from_pretrained(model_name)
+
+    return model, processor
 
 
 def clasificar_actividad(imagen_pil, objetos):
+
     """
     Clasifica actividades institucionales utilizando CLIP
     y genera explicaciones apoyadas con YOLOv8.
     """
+
+    model, processor = _load_clip()
 
     categorias_dict = {
 
@@ -47,6 +64,7 @@ def clasificar_actividad(imagen_pil, objetos):
     # =====================================================
     # Inferencia con CLIP
     # =====================================================
+
     inputs = processor(
         text=descripciones_en,
         images=imagen_pil,
@@ -55,6 +73,7 @@ def clasificar_actividad(imagen_pil, objetos):
     ).to(device)
 
     with torch.no_grad():
+
         outputs = model(**inputs)
 
     probs = outputs.logits_per_image.softmax(dim=1)
@@ -62,11 +81,13 @@ def clasificar_actividad(imagen_pil, objetos):
     idx_max = torch.argmax(probs).item()
 
     actividad_final = nombres_es[idx_max]
+
     confianza = probs[0][idx_max].item()
 
     # =====================================================
-    # Top 2 categorías (útil para ambigüedad)
+    # Top 2 categorías
     # =====================================================
+
     top2 = torch.topk(probs, 2)
 
     idx1 = top2.indices[0][0].item()
@@ -78,18 +99,16 @@ def clasificar_actividad(imagen_pil, objetos):
     score_1 = probs[0][idx1].item()
     score_2 = probs[0][idx2].item()
 
-    
     motivos = []
 
- 
     motivos.append(
         f"La imagen presenta características visuales asociadas a una actividad de tipo {actividad_final}."
     )
 
-  
-   
+    # =====================================================
+    # Explicaciones por categoría
+    # =====================================================
 
-  
     if actividad_final == "Clase":
 
         motivos.append(
@@ -137,7 +156,6 @@ def clasificar_actividad(imagen_pil, objetos):
             "La composición visual coincide con eventos formales institucionales."
         )
 
-  
     elif actividad_final == "Celebracion":
 
         motivos.append(
@@ -145,11 +163,11 @@ def clasificar_actividad(imagen_pil, objetos):
         )
 
         if "cup" in objetos or "bottle" in objetos:
+
             motivos.append(
                 "Se identificaron elementos asociados a reuniones o celebraciones."
             )
 
-   
     elif actividad_final == "Centro Computo":
 
         motivos.append(
@@ -157,6 +175,7 @@ def clasificar_actividad(imagen_pil, objetos):
         )
 
         if "laptop" in objetos or "monitor" in objetos:
+
             motivos.append(
                 "Se detectaron equipos tecnológicos utilizados en actividades académicas."
             )
@@ -185,7 +204,6 @@ def clasificar_actividad(imagen_pil, objetos):
             "La imagen no contiene suficientes elementos visuales para identificar una actividad institucional."
         ]
 
-    # Limitar confianza máxima
     confianza = min(confianza, 0.95)
 
     return actividad_final, confianza, motivos
