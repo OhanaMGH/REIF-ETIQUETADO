@@ -1,20 +1,21 @@
 from pymongo import MongoClient
+import certifi
 import os
 import sys
 
-# URI obtenida desde Render Environment Variables
 MONGO_URI = os.getenv("MONGO_URI")
 
 try:
-    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+    client = MongoClient(
+        MONGO_URI,
+        tls=True,
+        tlsCAFile=certifi.where(),
+        serverSelectionTimeoutMS=5000
+    )
 
-    # Base de datos
     db = client["REIF_test"]
-
-    # Colección
     coleccion_imagenes = db["imagenes"]
 
-    # Verificar conexión
     client.server_info()
 
     print("✅ Conexión exitosa a MongoDB Atlas")
