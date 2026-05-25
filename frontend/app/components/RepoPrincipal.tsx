@@ -26,7 +26,7 @@ export default function RepoPrincipal() {
   const fetchImagenes = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/imagenes');
+      const response = await fetch('https://reif-backend.onrender.com/imagenes');
       if (!response.ok) throw new Error("Error en el servidor");
       const data = await response.json();
       setImagenes(data);

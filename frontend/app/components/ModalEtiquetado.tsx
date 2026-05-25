@@ -50,7 +50,7 @@ export default function ModalEtiquetado({ isOpen, onClose }: ModalEtiquetadoProp
     formData.append('file', file);
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/analizar', { method: 'POST', body: formData });
+      const res = await fetch('https://reif-backend.onrender.com/analizar', { method: 'POST', body: formData });
       const data = await res.json();
       if (data.success) {
         setDescripcionIA(data.descripcion);
@@ -67,7 +67,7 @@ export default function ModalEtiquetado({ isOpen, onClose }: ModalEtiquetadoProp
     if (!imagePreview || !etiquetaManual) return;
     setIsSaving(true);
     try {
-      const res = await fetch('http://127.0.0.1:8000/guardar', {
+      const res = await fetch('https://reif-backend.onrender.com/guardar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
