@@ -1,15 +1,22 @@
 fastapi
 uvicorn
-transformers
+transformers==4.41.2
+sentencepiece
+
 pillow
 python-multipart
+
 pymongo
 dnspython
-ultralytics
-opencv-python-headless
-numpy
-torch==2.2.2
-torchvision==0.17.2
---extra-index-url https://download.pytorch.org/whl/cpu
 certifi
-sentencepiece
+
+ultralytics==8.2.0
+
+opencv-python-headless
+
+numpy<2
+
+torch==2.2.2+cpu
+torchvision==0.17.2+cpu
+
+--extra-index-url https://download.pytorch.org/whl/cpu
